@@ -59,9 +59,13 @@ authRouter.post("/register", authLimiter, async (req, res) => {
   const verifyPath = `/e-posta-dogrula?token=${verifyToken}`;
   // Mailer ayarlıysa gerçek bir e-posta gider ve bağlantı yanıtta yer almaz;
   // ayarlı değilse (yerel geliştirme) önceki "test modu" davranışı sürer —
-  // bağlantı doğrudan yanıtta döner.
+  // bağlantı doğrudan yanıtta döner. Gönderim burada AWAIT edilmiyor — SMTP
+  // yavaş/engelli olduğunda (bazı host'larda çıkış portu kapalı) istek
+  // askıda kalmasın diye, kayıt yanıtı e-posta beklemeden dönüyor.
   if (isMailerConfigured()) {
-    await sendVerificationEmail(user.email, user.displayName, verifyPath);
+    sendVerificationEmail(user.email, user.displayName, verifyPath).catch((err) =>
+      console.error("Doğrulama e-postası gönderilemedi:", err),
+    );
   }
   res.status(201).json({
     id: user.id,
@@ -129,7 +133,9 @@ authRouter.post("/forgot-password", authLimiter, async (req, res) => {
 
   const resetPath = `/sifre-sifirla?token=${token}`;
   if (isMailerConfigured()) {
-    await sendPasswordResetEmail(user.email, user.displayName, resetPath);
+    sendPasswordResetEmail(user.email, user.displayName, resetPath).catch((err) =>
+      console.error("Şifre sıfırlama e-postası gönderilemedi:", err),
+    );
   }
   res.json({
     ...genericResponse,
@@ -238,7 +244,9 @@ authRouter.post("/resend-verification", authLimiter, requireAuth, async (req, re
 
   const verifyPath = `/e-posta-dogrula?token=${verifyToken}`;
   if (isMailerConfigured()) {
-    await sendVerificationEmail(user.email, user.displayName, verifyPath);
+    sendVerificationEmail(user.email, user.displayName, verifyPath).catch((err) =>
+      console.error("Doğrulama e-postası gönderilemedi:", err),
+    );
   }
   res.json(isMailerConfigured() ? {} : { verifyLink: verifyPath });
 });
@@ -323,7 +331,9 @@ authRouter.post("/change-email", authLimiter, requireAuth, async (req, res) => {
   // kendi kontrolündeki bir adrese sessizce çeviremesin diye.
   const confirmPath = `/e-posta-degistir-onayla?token=${token}`;
   if (isMailerConfigured()) {
-    await sendEmailChangeConfirmation(newEmail, user.displayName, confirmPath);
+    sendEmailChangeConfirmation(newEmail, user.displayName, confirmPath).catch((err) =>
+      console.error("E-posta değişikliği onay maili gönderilemedi:", err),
+    );
   }
   res.json({
     pendingEmail: newEmail,
