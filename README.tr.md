@@ -66,7 +66,7 @@ cd backend && npm run typecheck && npm test
 cd frontend && npm run typecheck && npm run lint && npm test
 ```
 
-Aynı komutlar her push/PR'da [GitHub Actions](.github/workflows/ci.yml) üzerinden otomatik çalışır.
+[GitHub Actions](.github/workflows/ci.yml) her push/PR'da aynı kontrolleri çalıştırır — frontend işinde orada `typecheck` yerine `npm run build` çalışır, çünkü Next.js'in route/param tipleri (`tsc --noEmit`'in ihtiyaç duyduğu) ancak bir build ya da `next dev` bir kere çalıştıktan sonra var olur, taze bir CI checkout'unda ise ikisi de yoktur.
 
 ## Nasıl çalışır
 
