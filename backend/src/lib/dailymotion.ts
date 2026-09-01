@@ -34,8 +34,10 @@ function normalize(text: string) {
 
 const channelCache = new Map<string, DailymotionChannel | null>();
 
-// Bir dizinin tam bölümlerini yükleyen Dailymotion hesabını bulur — YouTube
-// tarafındaki findShowChannel ile aynı mantık: isim benzerliğine değil,
+// Bir dizinin tam bölümlerini yükleyen Dailymotion hesabını bulur. Hesap adı
+// dizinin adını içermiyorsa hiç aday sayılmaz — video başlıkları doğru olsa
+// bile ("Medcezir E24" yükleyen "MabzyMabz" gibi rastgele bir kullanıcı),
+// hesap ismi güvenilir bir kaynağı garanti etmiyor. Kalanlar arasından da
 // gerçekten bölüm uzunluğunda ve gömülebilir en az iki video yükleyen
 // hesaba bakılır.
 //
@@ -67,11 +69,18 @@ export async function findDailymotionChannel(
   // tarihi burada da elle doğruluyoruz — garanti çalışan taraf bu.
   const minTimestamp = minYear ? Date.UTC(minYear - 1, 0, 1) / 1000 : null;
 
+  // Hesap adı dizinin adıyla hiç ilgisi olmayan bir kullanıcıysa (ör.
+  // "MabzyMabz"), yüklediği videoların başlığı doğru bile olsa hesabı
+  // "resmi/güvenilir kaynak" saymıyoruz — rastgele bir kullanıcının doğru
+  // isimlendirdiği videolar, gelecekte aynı hesaba alakasız içerik de
+  // yüklenebileceği garantisi vermiyor.
+  const normalizedTitle = normalize(showTitle);
   const counts = new Map<string, number>();
   for (const item of data.list ?? []) {
     const owner = item["owner.screenname"];
     if (!owner || !item.allow_embed || item.duration < MIN_EPISODE_SECONDS) continue;
     if (minTimestamp && item.created_time && item.created_time < minTimestamp) continue;
+    if (!normalize(owner).includes(normalizedTitle)) continue;
     counts.set(owner, (counts.get(owner) ?? 0) + 1);
   }
 

@@ -176,10 +176,18 @@ export async function findShowChannel(
   const items = data.items.filter((item) => item.id?.videoId && item.snippet.channelId);
   const meta = await fetchVideoMeta(items.map((item) => item.id.videoId!));
 
+  // Kanal adı dizinin adını içermiyorsa hiç aday sayılmaz — video başlıkları
+  // doğru bile olsa, isimsiz/alakasız bir kanalı "resmi kaynak" saymıyoruz
+  // (bkz. Dailymotion tarafındaki aynı kural — gerçek verilerde Türk
+  // dizilerinin resmi YouTube yüklemeleri neredeyse hep dizinin adını taşıyan
+  // bir kanaldan geliyor, bu yüzden bu kısıt pratikte doğru eşleşmeleri
+  // etkilemiyor).
+  const normalizedTitle = normalize(showTitle);
   const counts = new Map<string, { title: string; count: number }>();
   for (const item of items) {
     const info = meta.get(item.id.videoId!);
     if (!info || info.durationSeconds < MIN_EPISODE_SECONDS || !info.embeddable) continue;
+    if (!normalize(item.snippet.channelTitle).includes(normalizedTitle)) continue;
     const channelId = item.snippet.channelId!;
     const entry = counts.get(channelId);
     if (entry) entry.count += 1;
