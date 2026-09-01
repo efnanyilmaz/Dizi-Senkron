@@ -39,10 +39,20 @@ export function hashResetToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+// Prod'da frontend (vercel.app) ve backend (onrender.com gibi) farklı
+// domain'lerde yaşıyor — tarayıcı bunu "cross-site" sayar. SameSite=Lax
+// cookie'ler cross-site fetch/XHR isteklerinde GÖNDERİLMEZ (sadece üst
+// seviye navigasyonlarda), yani frontend'in backend'e attığı her API isteği
+// oturumsuz görünür ve giriş sessizce bozulur. "None" cross-site fetch'te de
+// gönderilmesini sağlar, ama tarayıcılar SameSite=None'ı Secure olmadan
+// reddeder — ikisi birlikte gitmek zorunda. Local dev'de (aynı "site" sayılan
+// localhost:3000 ↔ localhost:4000) Lax zaten yeterli ve Secure gerektirmediği
+// için orada dokunmuyoruz.
+const isProd = env.nodeEnv === "production";
 export const sessionCookieOptions = {
   httpOnly: true,
-  sameSite: "lax" as const,
-  secure: env.nodeEnv === "production",
+  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+  secure: isProd,
   maxAge: SESSION_MAX_AGE_MS,
   path: "/",
 };
