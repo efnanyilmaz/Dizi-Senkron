@@ -1,5 +1,7 @@
 # Dizi Senkron
 
+🇬🇧 English | 🇹🇷 [Türkçe](README.tr.md)
+
 **Dizi Senkron** is a real-time watch-party app for groups of friends tracking a TV show together — see who's caught up, chat without spoilers, and watch YouTube episodes in sync.
 
 Built as a full-stack portfolio project, focused on Turkish-language TV dramas.
@@ -82,6 +84,19 @@ A few of the harder problems this project actually had to solve, not just wire u
 
 Email verification and password reset send through SMTP (`backend/src/lib/mailer.ts` — see `.env.example` for setup; a Gmail App Password works for testing, any SMTP provider works for production) when `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` are set. Left unset (the default for local dev), `POST /auth/forgot-password` and the email-verification endpoints fall back to returning the link directly in the API response instead of emailing it, and the frontend surfaces it inline with a "test mode" label — so the whole auth flow is testable without setting up an email account.
 
+## Deployment
+
+Frontend and backend deploy separately, on purpose:
+
+- **Frontend → [Vercel](https://vercel.com)** — a native fit for Next.js, free tier.
+- **Backend → a host that keeps a persistent process** (e.g. [Render](https://render.com), [Railway](https://railway.app), [Fly.io](https://fly.io)) — **not Vercel**. The backend holds real-time Socket.io connections (chat, watch-together sync, live progress); Vercel's serverless functions can't keep a WebSocket connection alive, so the backend needs a host that runs Node as a long-lived server.
+
+Since the two live on different domains, a few things need to line up:
+
+- Backend env: `FRONTEND_URL` set to the deployed frontend origin (used for CORS and the Socket.io handshake).
+- Frontend env: `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SOCKET_URL` set to the deployed backend origin; `NEXT_PUBLIC_SITE_URL` set to the frontend's own origin (used for SEO metadata — canonical URLs, sitemap, robots.txt).
+- The session cookie automatically switches to `SameSite=None; Secure` when `NODE_ENV=production` (see `backend/src/lib/auth.ts`) — required for the cookie to survive a cross-domain fetch between the two hosts. Both hosts need to actually serve over HTTPS for this to work, which Vercel/Render/Railway/Fly.io all do by default.
+
 ## Project structure
 
 ```
@@ -102,7 +117,7 @@ frontend/
 
 ## Notes
 
-This is a portfolio/learning project, not a production service — TMDB/YouTube keys are required for show data and episode search to work, and there's no deployed instance by default.
+This started as a portfolio/learning project and may go live as a real service — TMDB/YouTube keys are required for show data and episode search to work either way, and there's no deployed instance yet.
 
 ## License
 
