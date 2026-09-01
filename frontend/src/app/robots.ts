@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site-url";
 
 // Grup/profil/favoriler gibi sayfalar oturuma özel — arama sonuçlarında
 // görünmelerinin bir anlamı yok, hatta davet/onay linkleri gibi token içeren
@@ -19,6 +20,6 @@ export default function robots(): MetadataRoute.Robots {
         "/e-posta-degistir-onayla",
       ],
     },
-    sitemap: "https://dizisenkron.app/sitemap.xml",
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

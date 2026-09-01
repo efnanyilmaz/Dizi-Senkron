@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL as BASE_URL } from "@/lib/site-url";
 
-const BASE_URL = "https://dizisenkron.app";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
 // Sitemap'i her istekte TMDB'ye vurdurmamak için bir saat önbellekte tutuyoruz.

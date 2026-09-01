@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -25,7 +26,7 @@ const description =
   "Arkadaş gruplarıyla bir diziyi birlikte takip et, ilerlemeni paylaş, spoiler almadan sohbet et.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://dizisenkron.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Dizi Senkron",
     template: "%s · Dizi Senkron",
