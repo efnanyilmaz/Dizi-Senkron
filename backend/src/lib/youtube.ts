@@ -146,8 +146,15 @@ function normalize(text: string) {
 // Bir dizinin tam bölümlerini yükleyen kanalı bulur. İsim benzerliğine değil,
 // gerçekten bölüm uzunluğunda (>=40dk) video yükleyen kanala bakılır — aksi halde
 // fragman/klip yükleyen bir "fan" kanalı yanlışlıkla seçilebiliyordu.
-export async function findShowChannel(showTitle: string): Promise<YoutubeChannel | null> {
-  const cacheKey = normalize(showTitle);
+//
+// minYear (dizinin TMDB'deki ilk yayın yılı) verilirse arama o tarihten öncesine
+// kapatılır — aksi halde aynı isimli ama alakasız, çok daha eski bir yapım (ör.
+// aynı adı taşıyan yerel bir TV programı) "resmi kanal" sanılabiliyordu.
+export async function findShowChannel(
+  showTitle: string,
+  minYear?: number | null,
+): Promise<YoutubeChannel | null> {
+  const cacheKey = `${normalize(showTitle)}::${minYear ?? ""}`;
   if (channelCache.has(cacheKey)) return channelCache.get(cacheKey)!;
 
   const key = requireKey();
@@ -159,6 +166,8 @@ export async function findShowChannel(showTitle: string): Promise<YoutubeChannel
   url.searchParams.set("type", "video");
   url.searchParams.set("maxResults", "25");
   url.searchParams.set("relevanceLanguage", "tr");
+  // Yayın öncesi tanıtımlara biraz pay bırakmak için bir yıl geriye toleranslı.
+  if (minYear) url.searchParams.set("publishedAfter", `${minYear - 1}-01-01T00:00:00Z`);
 
   const res = await fetch(url);
   if (!res.ok) return null;

@@ -19,10 +19,12 @@ type MergedResult =
 
 export function YoutubeSearchPicker({
   showTitle,
+  tmdbId,
   onPick,
   submitLabel = "Yükle",
 }: {
   showTitle: string;
+  tmdbId?: number | null;
   onPick: (picked: PickedVideo) => void;
   submitLabel?: string;
 }) {
@@ -47,14 +49,20 @@ export function YoutubeSearchPicker({
   // bir kere tespit ederiz.
   useEffect(() => {
     let cancelled = false;
-    apiFetch<YoutubeChannel | null>(`/youtube/channel?title=${encodeURIComponent(showTitle)}`)
+    // tmdbId varsa dizinin gerçek ilk yayın yılı da gönderilir — aynı adı
+    // taşıyan ama alakasız, çok daha eski bir yapımın "resmi kanal/hesap"
+    // sanılmasını engeller (bkz. backend).
+    const tmdbParam = tmdbId ? `&tmdbId=${tmdbId}` : "";
+    apiFetch<YoutubeChannel | null>(`/youtube/channel?title=${encodeURIComponent(showTitle)}${tmdbParam}`)
       .then((result) => {
         if (!cancelled) setYtChannel(result);
       })
       .catch(() => {
         if (!cancelled) setYtChannel(null);
       });
-    apiFetch<DailymotionChannel | null>(`/dailymotion/channel?title=${encodeURIComponent(showTitle)}`)
+    apiFetch<DailymotionChannel | null>(
+      `/dailymotion/channel?title=${encodeURIComponent(showTitle)}${tmdbParam}`,
+    )
       .then((result) => {
         if (!cancelled) setDmChannel(result);
       })
@@ -64,7 +72,7 @@ export function YoutubeSearchPicker({
     return () => {
       cancelled = true;
     };
-  }, [showTitle]);
+  }, [showTitle, tmdbId]);
 
   useEffect(() => {
     if (ytChannel === undefined || dmChannel === undefined || !query.trim()) {
@@ -77,9 +85,10 @@ export function YoutubeSearchPicker({
     const timeout = setTimeout(() => {
       setSearching(true);
       setSearchError(null);
-      // Dizi adı her zaman sorguya eklenir — kanal kilidi hiç sonuç
-      // vermeyip kanalsız aramaya düşerse (bkz. backend), sorgu yine de
-      // dizinin adını içersin diye, sadece kanal varken bile atlanmaz.
+      // Dizi adı her zaman sorguya eklenir. Kanal tespit edilemediyse
+      // backend hiç arama yapmadan boş döner (bkz. backend) — alakasız
+      // dizilere ait sonuçlar gösterilmesin diye kanalsız aramaya
+      // düşülmüyor artık.
       const effectiveQuery = `${showTitle} ${query}`;
       const ytUrl = ytChannel
         ? `/youtube/search?q=${encodeURIComponent(effectiveQuery)}&channelId=${ytChannel.channelId}`

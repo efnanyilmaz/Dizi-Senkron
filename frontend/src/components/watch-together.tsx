@@ -115,6 +115,7 @@ export function WatchTogether({
   externalUrl,
   embeddable,
   showTitle,
+  tmdbId,
   positions,
   myUserId,
   onEpisodeDetected,
@@ -126,6 +127,7 @@ export function WatchTogether({
   externalUrl: string | null;
   embeddable: boolean;
   showTitle: string;
+  tmdbId?: number | null;
   positions: WatchPosition[];
   myUserId: string;
   onEpisodeDetected?: (episode: number) => void;
@@ -228,7 +230,7 @@ export function WatchTogether({
         <div className="mb-3 font-mono text-xs tracking-[0.08em] text-text-muted uppercase">
           Birlikte izle
         </div>
-        <YoutubeSearchPicker showTitle={showTitle} onPick={handlePick} />
+        <YoutubeSearchPicker showTitle={showTitle} tmdbId={tmdbId} onPick={handlePick} />
       </div>
     );
   }
@@ -248,7 +250,7 @@ export function WatchTogether({
           onSharePosition={onSharePosition}
         />
         <div className="border-t border-dashed border-screen-line p-4">
-          <YoutubeSearchPicker showTitle={showTitle} onPick={handlePick} submitLabel="Değiştir" />
+          <YoutubeSearchPicker showTitle={showTitle} tmdbId={tmdbId} onPick={handlePick} submitLabel="Değiştir" />
         </div>
       </UtilityPanel>
     );
@@ -272,7 +274,7 @@ export function WatchTogether({
           <PositionShare positions={positions} myUserId={myUserId} onSharePosition={onSharePosition} />
         </div>
         <div className="border-t border-dashed border-screen-line p-4">
-          <YoutubeSearchPicker showTitle={showTitle} onPick={handlePick} submitLabel="Değiştir" />
+          <YoutubeSearchPicker showTitle={showTitle} tmdbId={tmdbId} onPick={handlePick} submitLabel="Değiştir" />
         </div>
       </UtilityPanel>
     );
@@ -282,7 +284,7 @@ export function WatchTogether({
     <UtilityPanel label="Birlikte izleniyor" noPadding>
       <div className="aspect-video w-full" ref={containerRef} />
       <div className="border-t border-dashed border-screen-line p-4">
-        <YoutubeSearchPicker showTitle={showTitle} onPick={handlePick} submitLabel="Değiştir" />
+        <YoutubeSearchPicker showTitle={showTitle} tmdbId={tmdbId} onPick={handlePick} submitLabel="Değiştir" />
       </div>
     </UtilityPanel>
   );

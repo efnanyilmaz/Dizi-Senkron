@@ -24,6 +24,7 @@ type RawDailymotionItem = {
   duration: number;
   allow_embed: boolean;
   thumbnail_url?: string;
+  created_time?: number;
   "owner.screenname"?: string;
 };
 
@@ -37,14 +38,24 @@ const channelCache = new Map<string, DailymotionChannel | null>();
 // tarafındaki findShowChannel ile aynı mantık: isim benzerliğine değil,
 // gerçekten bölüm uzunluğunda ve gömülebilir en az iki video yükleyen
 // hesaba bakılır.
-export async function findDailymotionChannel(showTitle: string): Promise<DailymotionChannel | null> {
-  const cacheKey = normalize(showTitle);
+//
+// minYear (dizinin TMDB'deki ilk yayın yılı) verilirse o tarihten öncesine
+// ait videolar elenir — aksi halde aynı adı taşıyan ama alakasız, çok daha
+// eski bir yapım (ör. aynı adı taşıyan yerel bir TV programı) "resmi hesap"
+// sanılabiliyordu.
+export async function findDailymotionChannel(
+  showTitle: string,
+  minYear?: number | null,
+): Promise<DailymotionChannel | null> {
+  const cacheKey = `${normalize(showTitle)}::${minYear ?? ""}`;
   if (channelCache.has(cacheKey)) return channelCache.get(cacheKey)!;
 
   const url = new URL(`${DAILYMOTION_API_URL}/videos`);
   url.searchParams.set("search", showTitle);
-  url.searchParams.set("fields", "id,duration,allow_embed,owner.screenname");
+  url.searchParams.set("fields", "id,duration,allow_embed,owner.screenname,created_time");
   url.searchParams.set("limit", "25");
+  // Yayın öncesi tanıtımlara biraz pay bırakmak için bir yıl geriye toleranslı.
+  if (minYear) url.searchParams.set("created_after", `${minYear - 1}-01-01`);
 
   const res = await fetch(url);
   if (!res.ok) {
@@ -52,11 +63,15 @@ export async function findDailymotionChannel(showTitle: string): Promise<Dailymo
     return null;
   }
   const data = (await res.json()) as { list?: RawDailymotionItem[] };
+  // created_after API parametresine güvenmek yerine (dokümantasyonu belirsiz),
+  // tarihi burada da elle doğruluyoruz — garanti çalışan taraf bu.
+  const minTimestamp = minYear ? Date.UTC(minYear - 1, 0, 1) / 1000 : null;
 
   const counts = new Map<string, number>();
   for (const item of data.list ?? []) {
     const owner = item["owner.screenname"];
     if (!owner || !item.allow_embed || item.duration < MIN_EPISODE_SECONDS) continue;
+    if (minTimestamp && item.created_time && item.created_time < minTimestamp) continue;
     counts.set(owner, (counts.get(owner) ?? 0) + 1);
   }
 

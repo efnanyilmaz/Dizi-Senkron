@@ -612,6 +612,7 @@ export default function GrupDetayPage() {
           externalUrl={group.nowPlayingExternalUrl}
           embeddable={group.nowPlayingEmbeddable}
           showTitle={group.show.title}
+          tmdbId={group.show.tmdbId}
           positions={[...watchPositions.values()]}
           myUserId={me?.id ?? ""}
           onEpisodeDetected={setEpisode}

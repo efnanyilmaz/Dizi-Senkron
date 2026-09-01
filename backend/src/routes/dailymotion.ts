@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/require-auth.js";
+import { getShowDetails } from "../lib/tmdb.js";
 import {
   findDailymotionChannel,
   getDailymotionVideoInfo,
@@ -14,22 +15,27 @@ dailymotionRouter.get("/channel", requireAuth, async (req, res) => {
   if (!title) {
     return res.json(null);
   }
-  const channel = await findDailymotionChannel(title);
+  // tmdbId verilirse dizinin gerçek ilk yayın yılı öğrenilip hesap aramasına
+  // geçirilir — bkz. findDailymotionChannel.
+  const tmdbId = req.query.tmdbId ? Number(req.query.tmdbId) : null;
+  const minYear = tmdbId ? (await getShowDetails(tmdbId))?.firstAirYear ?? null : null;
+  const channel = await findDailymotionChannel(title, minYear);
   res.json(channel);
 });
 
+// Bilerek kanalsız arama yapmıyoruz — dizinin kendi hesabı tespit
+// edilemiyorsa (yeni bir dizi, henüz yeterli bölüm yüklenmemiş olabilir)
+// genel bir Dailymotion araması alakasız/yanlış dizilere ait videolar
+// getirebiliyordu. Kanal yoksa ya da o kanalda sonuç çıkmıyorsa boş liste
+// dönülür — kullanıcı isterse "link yapıştır" moduna geçer.
 dailymotionRouter.get("/search", requireAuth, async (req, res) => {
   const query = String(req.query.q ?? "").trim();
-  if (!query) {
+  const ownerName = req.query.ownerName ? String(req.query.ownerName) : undefined;
+  if (!query || !ownerName) {
     return res.json([]);
   }
-  const ownerName = req.query.ownerName ? String(req.query.ownerName) : undefined;
 
-  let results = await searchDailymotionVideos(query, ownerName);
-  // Kanal hiç embeddable sonuç vermiyorsa, kanala kilitlenmeden tekrar dene.
-  if (results.length === 0 && ownerName) {
-    results = await searchDailymotionVideos(query);
-  }
+  const results = await searchDailymotionVideos(query, ownerName);
   res.json(results);
 });
 

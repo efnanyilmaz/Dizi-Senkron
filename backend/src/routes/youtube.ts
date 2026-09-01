@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/require-auth.js";
+import { getShowDetails } from "../lib/tmdb.js";
 import {
   findShowChannel,
   getVideoInfo,
@@ -15,25 +16,29 @@ youtubeRouter.get("/channel", requireAuth, async (req, res) => {
   if (!title) {
     return res.json(null);
   }
-  const channel = await findShowChannel(title);
+  // tmdbId verilirse dizinin gerçek ilk yayın yılı öğrenilip kanal aramasına
+  // geçirilir — aksi halde aynı adı taşıyan ama alakasız, çok daha eski bir
+  // yapım "resmi kanal" sanılabiliyordu (bkz. findShowChannel).
+  const tmdbId = req.query.tmdbId ? Number(req.query.tmdbId) : null;
+  const minYear = tmdbId ? (await getShowDetails(tmdbId))?.firstAirYear ?? null : null;
+  const channel = await findShowChannel(title, minYear);
   res.json(channel);
 });
 
+// Bilerek kanalsız arama yapmıyoruz — dizinin resmi kanalı tespit
+// edilemiyorsa (yeni bir dizi, henüz yeterli bölüm yüklenmemiş olabilir)
+// genel bir YouTube araması alakasız/yanlış dizilere ait videolar
+// getirebiliyordu. Kanal yoksa ya da o kanalda sonuç çıkmıyorsa boş liste
+// dönülür — kullanıcı isterse "link yapıştır" moduna geçer.
 youtubeRouter.get("/search", requireAuth, async (req, res) => {
   const query = String(req.query.q ?? "").trim();
-  if (!query) {
+  const channelId = req.query.channelId ? String(req.query.channelId) : undefined;
+  if (!query || !channelId) {
     return res.json([]);
   }
-  const channelId = req.query.channelId ? String(req.query.channelId) : undefined;
 
   try {
-    let results = await searchYoutubeVideos(query, channelId);
-    // Dizinin tespit edilen kanalı hiç embeddable sonuç vermiyorsa (bkz.
-    // /validate'teki not), kanala kilitlenmeden tekrar dene — hiç sonuç
-    // göstermemek yerine oynatılabilir başka kaynaklar sunulsun.
-    if (results.length === 0 && channelId) {
-      results = await searchYoutubeVideos(query);
-    }
+    const results = await searchYoutubeVideos(query, channelId);
     res.json(results);
   } catch (err) {
     if (err instanceof YoutubeQuotaError) {
