@@ -4,7 +4,10 @@ services:
     env: node
     plan: free
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+    # --include=dev şart: NODE_ENV=production ayarlıyken düz "npm install"
+    # devDependencies'i (typescript, @types/* — build'in kendisinin
+    # ihtiyaç duyduğu paketler) atlıyor, sonra tsc tip hatalarıyla patlıyor.
+    buildCommand: npm install --include=dev && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
