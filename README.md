@@ -104,6 +104,10 @@ frontend/
 
 This is a portfolio/learning project, not a production service — TMDB/YouTube keys are required for show data and episode search to work, and there's no deployed instance by default.
 
+## License
+
+[MIT](LICENSE)
+
 ## Author
 
 Built by Efnan Yılmaz — [GitHub](https://github.com/efnanyilmaz) · [LinkedIn](https://linkedin.com/in/efnanyilmaz)
