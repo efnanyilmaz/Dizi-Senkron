@@ -106,7 +106,7 @@ This is a portfolio/learning project, not a production service — TMDB/YouTube 
 
 ## License
 
-All rights reserved — see [LICENSE](LICENSE). This code is public for portfolio/review purposes only; it is not licensed for reuse, copying, or redistribution.
+All rights reserved — see [LICENSE](LICENSE). Not licensed for reuse, copying, or redistribution.
 
 ## Author
 
