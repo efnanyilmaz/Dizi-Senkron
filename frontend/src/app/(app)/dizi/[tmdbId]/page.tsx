@@ -13,6 +13,7 @@ import { FieldError } from "@/components/field-error";
 import { NextEpisodeBanner } from "@/components/next-episode-banner";
 import { withMinDelay } from "@/lib/min-delay";
 import type { ShowDTO, TmdbShowDetail } from "@/types/show";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function DiziDetayPage() {
   const params = useParams<{ tmdbId: string }>();
@@ -44,7 +45,7 @@ export default function DiziDetayPage() {
         setIsFavorite(!!existing);
         setFavoriteShowId(existing?.id ?? null);
       })
-      .catch((err) => setLoadError(err instanceof Error ? err.message : "Dizi yüklenemedi."))
+      .catch((err) => setLoadError(getErrorMessage(err, "Dizi yüklenemedi.")))
       .finally(() => setLoading(false));
   }, [tmdbId]);
 
@@ -78,7 +79,7 @@ export default function DiziDetayPage() {
       });
       router.push(`/grup/${group.id}`);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setCreateError(getErrorMessage(err));
       setCreating(false);
     }
   }

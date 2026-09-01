@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { extractYoutubeVideoId, type YoutubeChannel, type YoutubeSearchResult } from "@/lib/youtube";
 import { extractDailymotionVideoId, type DailymotionChannel, type DailymotionSearchResult } from "@/lib/dailymotion";
 import { FieldError } from "@/components/field-error";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export type PickedVideo =
   | { videoId: string; dailymotionId?: undefined; externalUrl?: undefined; title: string; embeddable: boolean }
@@ -101,7 +102,7 @@ export function YoutubeSearchPicker({
             if (err instanceof ApiError && err.status === 429) {
               setQuotaExhausted(true);
             } else {
-              setSearchError(err instanceof Error ? err.message : "Arama başarısız oldu.");
+              setSearchError(getErrorMessage(err, "Arama başarısız oldu."));
             }
           }
 
@@ -143,7 +144,7 @@ export function YoutubeSearchPicker({
         onPick({ videoId: ytId, title: result.title, embeddable: result.embeddable });
         setUrlInput("");
       } catch (err) {
-        setLinkError(err instanceof Error ? err.message : "Bu link doğrulanamadı.");
+        setLinkError(getErrorMessage(err, "Bu link doğrulanamadı."));
       } finally {
         setValidating(false);
       }
@@ -160,7 +161,7 @@ export function YoutubeSearchPicker({
         onPick({ dailymotionId: dmId, title: result.title, embeddable: result.embeddable });
         setUrlInput("");
       } catch (err) {
-        setLinkError(err instanceof Error ? err.message : "Bu link doğrulanamadı.");
+        setLinkError(getErrorMessage(err, "Bu link doğrulanamadı."));
       } finally {
         setValidating(false);
       }

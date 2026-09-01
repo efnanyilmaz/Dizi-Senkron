@@ -7,6 +7,7 @@ import { UtilityPanel } from "@/components/utility-panel";
 import { FieldError } from "@/components/field-error";
 import { PosterThumb } from "@/components/poster-thumb";
 import type { TmdbShow } from "@/types/show";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type PollOption = {
   id: string;
@@ -147,7 +148,7 @@ export function GroupPoll({ groupId }: { groupId: string }) {
       setCreating(false);
       setDraftOptions([{ label: "" }, { label: "" }]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Anket oluşturulamadı.");
+      setError(getErrorMessage(err, "Anket oluşturulamadı."));
     }
   }
 
@@ -160,7 +161,7 @@ export function GroupPoll({ groupId }: { groupId: string }) {
       });
       setPoll(updated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Oy verilemedi.");
+      setError(getErrorMessage(err, "Oy verilemedi."));
     }
   }
 
@@ -175,7 +176,7 @@ export function GroupPoll({ groupId }: { groupId: string }) {
       setPoll(updated);
       setNewOption({ label: "" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Seçenek eklenemedi.");
+      setError(getErrorMessage(err, "Seçenek eklenemedi."));
     }
   }
 
@@ -185,7 +186,7 @@ export function GroupPoll({ groupId }: { groupId: string }) {
       await apiFetch(`/groups/${groupId}/poll/${poll.id}/close`, { method: "POST" });
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Anket kapatılamadı.");
+      setError(getErrorMessage(err, "Anket kapatılamadı."));
     }
   }
 
@@ -199,7 +200,7 @@ export function GroupPoll({ groupId }: { groupId: string }) {
       // sayfanın tamamının taze veriyle yeniden yüklenmesi en güvenlisi.
       window.location.reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Dizi değiştirilemedi.");
+      setError(getErrorMessage(err, "Dizi değiştirilemedi."));
       setSwitching(false);
     }
   }

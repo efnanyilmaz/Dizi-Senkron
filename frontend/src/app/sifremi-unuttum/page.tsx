@@ -7,6 +7,7 @@ import { GuideCard } from "@/components/guide-card";
 import { FormField } from "@/components/form-field";
 import { FieldError } from "@/components/field-error";
 import { apiFetch } from "@/lib/api";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type ForgotPasswordResponse = { message: string; resetLink?: string };
 
@@ -28,7 +29,7 @@ export default function SifremiUnuttumPage() {
       });
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

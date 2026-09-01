@@ -16,6 +16,7 @@ import { FieldError } from "@/components/field-error";
 import { UtilityPanel } from "@/components/utility-panel";
 import { HeroBannerSkeleton, TicketRowSkeleton, PosterRowSkeleton } from "@/components/skeletons";
 import type { ShowDTO, TmdbShow } from "@/types/show";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type MyGroup = {
   id: string;
@@ -123,7 +124,7 @@ export default function GruplarimPage() {
       });
       window.location.reload();
     } catch (err) {
-      setJoinError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setJoinError(getErrorMessage(err));
     }
   }
 

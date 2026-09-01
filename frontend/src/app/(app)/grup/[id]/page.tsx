@@ -22,6 +22,7 @@ import { toMemberProgress } from "@/lib/member-progress";
 import { backdropUrl } from "@/lib/tmdb-image";
 import type { GroupDetail, MessageDTO } from "@/types/group";
 import type { NextEpisodeInfo } from "@/types/show";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type Me = { id: string; displayName: string };
 
@@ -120,7 +121,7 @@ export default function GrupDetayPage() {
       .catch((err) => {
         if (cancelled) return;
         setLoadError(
-          err instanceof Error ? err.message : "Grup yüklenemedi, bağlantı sorunlu olabilir.",
+          getErrorMessage(err, "Grup yüklenemedi, bağlantı sorunlu olabilir."),
         );
       })
       .finally(() => {
@@ -394,7 +395,7 @@ export default function GrupDetayPage() {
       setGroup((prev) => (prev ? { ...prev, name: updated.name } : prev));
       setEditingName(false);
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Grup adı değiştirilemedi.");
+      setNotice(getErrorMessage(err, "Grup adı değiştirilemedi."));
     } finally {
       setRenaming(false);
     }

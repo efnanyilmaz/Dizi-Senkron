@@ -8,6 +8,7 @@ import { GuideCard } from "@/components/guide-card";
 import { FormField } from "@/components/form-field";
 import { FieldError } from "@/components/field-error";
 import { apiFetch } from "@/lib/api";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function SifreSifirlaForm() {
   const router = useRouter();
@@ -30,7 +31,7 @@ function SifreSifirlaForm() {
       setDone(true);
       setTimeout(() => router.push("/giris"), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

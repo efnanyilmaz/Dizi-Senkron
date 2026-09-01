@@ -8,6 +8,7 @@ import { GuideCard } from "@/components/guide-card";
 import { FormField } from "@/components/form-field";
 import { FieldError } from "@/components/field-error";
 import { apiFetch } from "@/lib/api";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function KayitForm() {
   const router = useRouter();
@@ -32,7 +33,7 @@ function KayitForm() {
       });
       router.push(next || "/gruplarim");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
       setLoading(false);
     }
   }

@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { FieldError } from "@/components/field-error";
 import { UtilityPanel } from "@/components/utility-panel";
 import type { GroupDetail, GroupMemberDTO } from "@/types/group";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function ActionChip({
   onClick,
@@ -60,7 +61,7 @@ export function GroupManagement({
       await apiFetch(`/groups/${group.id}/leave`, { method: "DELETE" });
       onLeftOrDeleted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
       setBusy(false);
     }
   }
@@ -72,7 +73,7 @@ export function GroupManagement({
       await apiFetch(`/groups/${group.id}`, { method: "DELETE" });
       onLeftOrDeleted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
       setBusy(false);
     }
   }
@@ -85,7 +86,7 @@ export function GroupManagement({
       onMemberRemoved(userId);
       setConfirming(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -101,7 +102,7 @@ export function GroupManagement({
       });
       onMemberModeratorChanged(member.user.id, !member.isModerator);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
     } finally {
       setBusy(false);
     }

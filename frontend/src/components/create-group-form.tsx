@@ -12,6 +12,7 @@ import { FieldError } from "@/components/field-error";
 import { UtilityPanel } from "@/components/utility-panel";
 import { posterUrl } from "@/lib/tmdb-image";
 import type { ShowDTO, TmdbShow, TmdbShowDetail } from "@/types/show";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export function CreateGroupForm({ presetShow }: { presetShow?: TmdbShow | null }) {
   const router = useRouter();
@@ -80,7 +81,7 @@ export function CreateGroupForm({ presetShow }: { presetShow?: TmdbShow | null }
       });
       router.push(`/grup/${group.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
       setCreating(false);
     }
   }

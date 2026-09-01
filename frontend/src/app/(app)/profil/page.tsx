@@ -6,6 +6,7 @@ import { ClapperLoader } from "@/components/clapper-loader";
 import { TicketField } from "@/components/ticket-field";
 import { FieldError } from "@/components/field-error";
 import { apiFetch } from "@/lib/api";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type Me = { id: string; email: string; displayName: string; emailVerified: boolean };
 
@@ -95,7 +96,7 @@ export default function ProfilPage() {
       setNameSaved(true);
       setTimeout(() => setNameSaved(false), 2000);
     } catch (err) {
-      setNameError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setNameError(getErrorMessage(err));
     } finally {
       setSavingName(false);
     }
@@ -115,7 +116,7 @@ export default function ProfilPage() {
       setPasswordSaved(true);
       setTimeout(() => setPasswordSaved(false), 2000);
     } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setPasswordError(getErrorMessage(err));
     } finally {
       setSavingPassword(false);
     }
@@ -139,7 +140,7 @@ export default function ProfilPage() {
       setEmailChangePassword("");
       setNewEmail("");
     } catch (err) {
-      setEmailError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setEmailError(getErrorMessage(err));
     } finally {
       setSavingEmail(false);
     }
@@ -158,7 +159,7 @@ export default function ProfilPage() {
         setVerifyEmailSent(true);
       }
     } catch (err) {
-      setVerifyError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setVerifyError(getErrorMessage(err));
     } finally {
       setResending(false);
     }
@@ -178,7 +179,7 @@ export default function ProfilPage() {
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = "/";
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setDeleteError(getErrorMessage(err));
       setDeleting(false);
     }
   }

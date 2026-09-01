@@ -11,6 +11,7 @@ import { ClapperLoader } from "@/components/clapper-loader";
 import { apiFetch } from "@/lib/api";
 import { withMinDelay } from "@/lib/min-delay";
 import type { ShowDTO } from "@/types/show";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type InvitePreview = {
   id: string;
@@ -45,7 +46,7 @@ export default function KatilPage() {
         );
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+        setError(getErrorMessage(err));
       });
   }, [code]);
 
@@ -58,7 +59,7 @@ export default function KatilPage() {
       });
       router.push(`/grup/${preview!.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
       setJoining(false);
     }
   }

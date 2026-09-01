@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
 import { GuideCard } from "@/components/guide-card";
 import { apiFetch } from "@/lib/api";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function EpostaDegistirOnaylaContent() {
   const token = useSearchParams().get("token");
@@ -31,7 +32,7 @@ function EpostaDegistirOnaylaContent() {
       .then(() => setStatus("done"))
       .catch((err) => {
         setStatus("error");
-        setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+        setError(getErrorMessage(err));
       });
   }, [token]);
 

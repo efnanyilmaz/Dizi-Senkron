@@ -6,6 +6,7 @@ import { GuideCard } from "@/components/guide-card";
 import { FormField } from "@/components/form-field";
 import { FieldError } from "@/components/field-error";
 import { apiFetch } from "@/lib/api";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function IletisimPage() {
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export default function IletisimPage() {
       });
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir şeyler ters gitti.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
