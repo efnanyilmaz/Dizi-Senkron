@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  displayName  String   @map("display_name")
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  resetTokenHash      String?   @map("reset_token_hash")
+  resetTokenExpiresAt DateTime? @map("reset_token_expires_at")
+
+  // E-posta doğrulama — kayıt sırasında null; doğrulanınca damgalanır.
+  // Şifre sıfırlamayla aynı token deseni kullanılır (hash + son kullanma).
+  emailVerifiedAt     DateTime? @map("email_verified_at")
+  verifyTokenHash     String?   @map("verify_token_hash")
+  verifyTokenExpiresAt DateTime? @map("verify_token_expires_at")
+
+  // E-posta değişikliği — yeni adres onaylanana kadar burada bekler, asıl
+  // `email` alanı değişmez. Onay linki yeni adrese gider; tıklanınca hem
+  // e-posta değişir hem de (adres kanıtlanmış sayıldığından) doğrulanmış
+  // işaretlenir. Böylece biri oturumu ele geçirse bile e-postayı kendi
+  // kontrolündeki bir adrese sessizce çeviremez.
+  pendingEmail              String?   @map("pending_email")
+  emailChangeTokenHash      String?   @map("email_change_token_hash")
+  emailChangeTokenExpiresAt DateTime? @map("email_change_token_expires_at")
+
+  ownedGroups   WatchGroup[]   @relation("GroupOwner")
+  memberships   GroupMember[]
+  messages      Message[]
+  favorites     Favorite[]
+  reactions     MessageReaction[]
+  createdPolls  Poll[]
+  pollVotes     PollVote[]
+  showStatuses  ShowStatus[]
+  messageReports MessageReport[]
+
+  @@map("users")
+}
+
+model Show {
+  id            String   @id @default(uuid())
+  title         String
+  posterPath    String?  @map("poster_path")
+  backdropPath  String?  @map("backdrop_path")
+  voteAverage   Float?   @map("vote_average")
+  tmdbId        Int?     @unique @map("tmdb_id")
+  totalSeasons  Int?     @map("total_seasons")
+  totalEpisodes Int?     @map("total_episodes")
+
+  groups    WatchGroup[]
+  favorites Favorite[]
+  statuses  ShowStatus[]
+
+  @@map("shows")
+}
+
+// Grup bağımsız kişisel izleme durumu — bir kullanıcı bir grubun üyesi
+// olmasa da bir diziyi "izliyorum/izledim/izlemek istiyorum" olarak işaretleyebilir.
+model ShowStatus {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  showId    String   @map("show_id")
+  status    String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  show Show @relation(fields: [showId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, showId])
+  @@map("show_statuses")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  showId    String   @map("show_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  show Show @relation(fields: [showId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, showId])
+  @@map("favorites")
+}
+
+model WatchGroup {
+  id         String   @id @default(uuid())
+  showId     String   @map("show_id")
+  name       String
+  inviteCode String   @unique @map("invite_code")
+  ownerId    String   @map("owner_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  nowPlayingVideoId String? @map("now_playing_video_id")
+  // Video YouTube'da gömülemiyorsa (embed kapalı) ya da hiç YouTube/Dailymotion
+  // linki değilse (bir kanal sitesinden yapıştırılmış link gibi), oynatıcı
+  // yerine "harici link" modu gösterilir — herkes videoyu kendi sekmesinde açar.
+  nowPlayingEmbeddable Boolean @default(true) @map("now_playing_embeddable")
+  // Dailymotion linkiyse buradadır (YouTube'daki gibi ayrı bir gömülü
+  // oynatıcı kullanır) — nowPlayingVideoId bu durumda null'dır.
+  nowPlayingDailymotionId String? @map("now_playing_dailymotion_id")
+  // YouTube/Dailymotion dışı bir link yapıştırıldığında (kanal sitesi vb.)
+  // burada tutulur — diğer iki alan bu durumda null'dır.
+  nowPlayingExternalUrl String? @map("now_playing_external_url")
+  isPublic   Boolean  @default(false) @map("is_public")
+
+  show    Show          @relation(fields: [showId], references: [id], onDelete: Cascade)
+  owner   User          @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members GroupMember[]
+  messages Message[]
+  polls   Poll[]
+
+  @@map("watch_groups")
+}
+
+model GroupMember {
+  id             String   @id @default(uuid())
+  groupId        String   @map("group_id")
+  userId         String   @map("user_id")
+  currentSeason  Int      @default(1) @map("current_season")
+  currentEpisode Int      @default(1) @map("current_episode")
+  joinedAt       DateTime @default(now()) @map("joined_at")
+  // Sahip dışında ikinci bir yetki kademesi — sahibin atadığı moderatörler
+  // başkalarının mesajını silebilir ve sıradan üyeleri gruptan çıkarabilir.
+  isModerator    Boolean  @default(false) @map("is_moderator")
+
+  group WatchGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
+
+model Message {
+  id            String   @id @default(uuid())
+  groupId       String   @map("group_id")
+  userId        String   @map("user_id")
+  content       String
+  // Gönderenin o anki sezon/bölümü — spoiler koruması bunu, mesajı okuyan
+  // kişinin kendi ilerlemesiyle karşılaştırır. Bu alanlardan önce yazılmış
+  // mesajlarda null'dır ve spoiler sayılmaz.
+  authorSeason  Int?     @map("author_season")
+  authorEpisode Int?     @map("author_episode")
+  createdAt     DateTime @default(now()) @map("created_at")
+  // Düzenlenmiş/silinmiş mesajlar satırda kalır (sohbet akışında yer
+  // kaymasın diye) — silinen mesajın içeriği boşaltılır, istemci deletedAt
+  // varsa yerine "Mesaj silindi" gösterir.
+  editedAt      DateTime? @map("edited_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  group     WatchGroup        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions MessageReaction[]
+  reports   MessageReport[]
+
+  @@index([groupId, createdAt])
+  @@map("messages")
+}
+
+// Bir üyenin bir mesajı kurallara aykırı bulup bildirmesi — Kullanım
+// Koşulları'nda tarif edilen tek gerçek şikayet mekanizması. Aynı kişi aynı
+// mesajı birden fazla kez bildiremez; inceleme şimdilik elle (veritabanından)
+// yapılır, ayrı bir yönetim panosu yok.
+model MessageReport {
+  id         String   @id @default(uuid())
+  messageId  String   @map("message_id")
+  reporterId String   @map("reporter_id")
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  message  Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reporter User    @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, reporterId])
+  @@map("message_reports")
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String   @map("message_id")
+  userId    String   @map("user_id")
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("message_reactions")
+}
+
+// İletişim formundan gelen mesajlar — giriş gerektirmez, herkes gönderebilir.
+// Şimdilik bir e-posta gönderim servisi bağlı olmadığından burada saklanır.
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("contact_messages")
+}
+
+// Grup içi "sırada ne izleyelim" anketi — bir grupta aynı anda en fazla bir
+// açık anket olması uygulama katmanında kontrol edilir, şemada zorunlu değil.
+model Poll {
+  id        String   @id @default(uuid())
+  groupId   String   @map("group_id")
+  createdBy String   @map("created_by")
+  isOpen    Boolean  @default(true) @map("is_open")
+  createdAt DateTime @default(now()) @map("created_at")
+  // Kazanan seçenek gruba yeni dizi olarak uygulandığında damgalanır — arayüz
+  // "bu diziye geç" eylemini bir daha göstermez.
+  showSwitchedAt DateTime? @map("show_switched_at")
+
+  group   WatchGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  creator User         @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  options PollOption[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id         String  @id @default(uuid())
+  pollId     String  @map("poll_id")
+  label      String
+  // Seçenek gerçek bir TMDB dizisiyle eşleşiyorsa doldurulur — anket kapanıp
+  // kazanan bu seçenekse grup sahibine "bu diziye geç" eylemi sunulabilir.
+  tmdbId     Int?    @map("tmdb_id")
+  posterPath String? @map("poster_path")
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+
+  @@map("poll_options")
+}
+
+model PollVote {
+  id       String @id @default(uuid())
+  optionId String @map("option_id")
+  userId   String @map("user_id")
+
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, userId])
+  @@map("poll_votes")
+}

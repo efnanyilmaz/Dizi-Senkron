@@ -1,0 +1,199 @@
+@import "tailwindcss";
+
+:root {
+  /* "Gösteri Gecesi" — sinema/gösteri temalı, sıcak ve eğlenceli palet */
+  --screen: #221430; /* velvet perde karanlığı — ana arkaplan (zengin mor, düz siyah değil) */
+  --screen-glow: #3a2247; /* kaldırılmış panel/kart yüzeyi */
+  --screen-line: #4a2f52; /* kenarlık — sıcak mor-gri */
+  --guide: #f5e6c8; /* patlamış mısır kremi — kağıt/kart yüzeyi */
+  --guide-edge: #e8d4a0;
+  --ink: #241522; /* koyu erik — krem yüzey üzerindeki metin */
+  --ink-soft: #6b5865;
+  --signal: #ffd23f; /* marki ampulü altını — birincil aksan */
+  --signal-soft: rgba(255, 210, 63, 0.18);
+  --sync: #ff5d8f; /* sahne ışığı pembesi — ikincil aksan */
+  --sync-soft: rgba(255, 93, 143, 0.16);
+  --danger: #e2455f;
+  --rating: #f5a623;
+  --rating-soft: rgba(245, 166, 35, 0.18);
+
+  /* Metin hiyerarşisi — tüm bileşenlerde bunlar kullanılır, doğrudan hex
+     değil, ki açık temada da okunaklı kalsın. */
+  --text-primary: #e7e4dc;
+  --text-secondary: #c7cbd1;
+  --text-muted: #8f98a3;
+  --text-faint: #5c636d;
+  --text-caption: #c9a6d1; /* mor-pembe büyük harf etiket rengi */
+}
+
+@theme inline {
+  --color-screen: var(--screen);
+  --color-screen-glow: var(--screen-glow);
+  --color-screen-line: var(--screen-line);
+  --color-guide: var(--guide);
+  --color-guide-edge: var(--guide-edge);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-signal: var(--signal);
+  --color-signal-soft: var(--signal-soft);
+  --color-sync: var(--sync);
+  --color-sync-soft: var(--sync-soft);
+  --color-danger: var(--danger);
+  --color-rating: var(--rating);
+  --color-rating-soft: var(--rating-soft);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-text-caption: var(--text-caption);
+
+  --font-display: var(--font-bebas);
+  --font-body: var(--font-manrope);
+  --font-mono: var(--font-plex-mono);
+}
+
+body {
+  /* Düz tek renk — bir geçiş (gradient) denenmişti ama koyu tonlarda
+     bantlaşma/çizgi artefaktı olarak görünebiliyor, o yüzden kusursuz düz
+     renkte kalınıyor. */
+  background: var(--screen);
+  color: #f2e6ee;
+  position: relative;
+}
+
+/* Sahne aydınlatması — iki mor tonu üst sağda ve alt solda süzülüyor
+   (önceden altın/pembe idi, tüm sitede tek düze mor bir temaya geçildi) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 900px 560px at 85% -8%, rgba(168, 123, 250, 0.13), transparent 60%),
+    radial-gradient(ellipse 780px 560px at -5% 105%, rgba(122, 61, 168, 0.16), transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--screen);
+}
+
+/* Spot ışığı gibi odak göstergesi — klavyeyle gezinirken */
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 5px rgba(255, 210, 63, 0.18);
+}
+
+@keyframes signal-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255, 210, 63, 0.55);
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow: 0 0 0 5px rgba(255, 210, 63, 0);
+  }
+}
+
+.animate-signal-pulse {
+  animation: signal-pulse 2.2s ease-in-out infinite;
+}
+
+/* Marki ampul kovalaması — birincil eylemler etrafında dönen ışık noktaları */
+@keyframes marquee-chase {
+  to {
+    background-position: 24px 0;
+  }
+}
+
+.marquee-border {
+  position: relative;
+}
+
+.marquee-border::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--signal) 0 6px,
+    transparent 6px 12px
+  );
+  background-size: 24px 100%;
+  animation: marquee-chase 0.8s linear infinite;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.marquee-border:hover::before {
+  opacity: 1;
+}
+
+/* Marki tabelası kayan yazı — "şimdi oynuyor" şeridi */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-scroll {
+  animation: marquee-scroll 28s linear infinite;
+}
+
+/* Film şeridi sprocket delikleri */
+.sprocket-strip {
+  height: 14px;
+  background-image: repeating-radial-gradient(
+    circle at 10px 7px,
+    var(--screen) 0 3.5px,
+    var(--screen-line) 3.5px 20px
+  );
+  background-color: var(--screen-line);
+}
+
+/* Makaradan geçen film şeridi — delikler yavaşça kayar */
+@keyframes sprocket-scroll {
+  to {
+    background-position: 40px 0;
+  }
+}
+
+.sprocket-strip-live {
+  animation: sprocket-scroll 4s linear infinite;
+}
+
+/* Yatay kaydırmalı sıralar (poster/bilet dizileri) — kaydırma çalışır,
+   tarayıcının kalın overlay scrollbar'ı görünmez. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-signal-pulse,
+  .marquee-border::before,
+  .animate-marquee-scroll,
+  .sprocket-strip-live {
+    animation: none;
+  }
+}
