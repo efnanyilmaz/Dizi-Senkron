@@ -89,7 +89,7 @@ E-posta doğrulama ve şifre sıfırlama, `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` ay
 Frontend ve backend kasıtlı olarak ayrı dağıtılır:
 
 - **Frontend → [Vercel](https://vercel.com)** — Next.js için doğal bir uyum, ücretsiz katman.
-- **Backend → kalıcı bir süreç tutan bir host** (ör. [Render](https://render.com), [Railway](https://railway.app), [Fly.io](https://fly.io)) — **Vercel değil**. Backend gerçek zamanlı Socket.io bağlantılarını (sohbet, birlikte izleme senkronu, canlı ilerleme) tutuyor; Vercel'in sunucusuz fonksiyonları bir WebSocket bağlantısını canlı tutamaz, bu yüzden backend'in Node'u kalıcı bir sunucu olarak çalıştıran bir host'a ihtiyacı var.
+- **Backend → kalıcı bir süreç tutan bir host** (ör. [Render](https://render.com), [Railway](https://railway.app), [Fly.io](https://fly.io)) — **Vercel değil**. Backend gerçek zamanlı Socket.io bağlantılarını (sohbet, birlikte izleme senkronu, canlı ilerleme) tutuyor; Vercel'in sunucusuz fonksiyonları bir WebSocket bağlantısını canlı tutamaz, bu yüzden backend'in Node'u kalıcı bir sunucu olarak çalıştıran bir host'a ihtiyacı var. [render.yaml](render.yaml), backend'i bir Render Blueprint'i olarak tanımlıyor — Render panelinde "New +" → "Blueprint" → bu repo'yu seç, servis bu dosyadan kurulur (aşağıdaki gizli env değişkenlerini repo'da saklamak yerine panelden senden ister).
 
 İkisi farklı domain'lerde yaşadığı için birkaç şeyin uyuşması gerekir:
 

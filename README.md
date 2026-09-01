@@ -89,7 +89,7 @@ Email verification and password reset send through SMTP (`backend/src/lib/mailer
 Frontend and backend deploy separately, on purpose:
 
 - **Frontend → [Vercel](https://vercel.com)** — a native fit for Next.js, free tier.
-- **Backend → a host that keeps a persistent process** (e.g. [Render](https://render.com), [Railway](https://railway.app), [Fly.io](https://fly.io)) — **not Vercel**. The backend holds real-time Socket.io connections (chat, watch-together sync, live progress); Vercel's serverless functions can't keep a WebSocket connection alive, so the backend needs a host that runs Node as a long-lived server.
+- **Backend → a host that keeps a persistent process** (e.g. [Render](https://render.com), [Railway](https://railway.app), [Fly.io](https://fly.io)) — **not Vercel**. The backend holds real-time Socket.io connections (chat, watch-together sync, live progress); Vercel's serverless functions can't keep a WebSocket connection alive, so the backend needs a host that runs Node as a long-lived server. [render.yaml](render.yaml) defines the backend as a Render Blueprint — in the Render dashboard, "New +" → "Blueprint" → pick this repo, and it provisions the service from that file (prompting for the secret env vars below rather than storing them in the repo).
 
 Since the two live on different domains, a few things need to line up:
 
