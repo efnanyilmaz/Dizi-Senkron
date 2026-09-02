@@ -621,7 +621,10 @@ export default function GrupDetayPage() {
       </div>
 
       <div className="grid grid-cols-[1.1fr_0.9fr] gap-6 max-[900px]:grid-cols-1">
-        <div className="space-y-6">
+        {/* Mobilde (tek sütuna indiğinde) sohbet videodan hemen sonra gelsin diye
+            sırası öne alınıyor — masaüstünde grid zaten iki sütun yan yana
+            olduğundan bu order'ların görsel bir etkisi olmuyor. */}
+        <div className="space-y-6 max-[900px]:order-2">
           <SyncTicker showTitle={group.show.title} showSubtitle="grup takibi" members={members} />
 
           <div className="flex flex-wrap items-end gap-4 rounded border border-screen-line bg-screen-glow px-5 py-4">
@@ -688,7 +691,7 @@ export default function GrupDetayPage() {
           )}
         </div>
 
-        <div className="h-[520px]">
+        <div className="h-[520px] max-[900px]:order-1">
           {me && (
             <ChatPanel
               messages={messages}
