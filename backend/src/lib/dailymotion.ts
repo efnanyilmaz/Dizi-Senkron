@@ -16,7 +16,11 @@ export type DailymotionSearchResult = {
   thumbnailUrl: string | null;
 };
 
-export type DailymotionChannel = { ownerName: string };
+// ownerName: kullanıcıya gösterilen görünen ad ("Muhteşem Yüzyıl").
+// ownerUsername: hesabın gerçek kullanıcı adı ("muhtesemyuzyil") — API'nin
+// `owners` filtresi SADECE bunu kabul ediyor, görünen adı değil. İkisi genelde
+// farklı (boşluk/büyük harf/Türkçe karakter), bu yüzden ayrı tutuluyorlar.
+export type DailymotionChannel = { ownerName: string; ownerUsername: string };
 
 type RawDailymotionItem = {
   id: string;
@@ -26,6 +30,7 @@ type RawDailymotionItem = {
   thumbnail_url?: string;
   created_time?: number;
   "owner.screenname"?: string;
+  "owner.username"?: string;
 };
 
 function normalize(text: string) {
@@ -54,7 +59,7 @@ export async function findDailymotionChannel(
 
   const url = new URL(`${DAILYMOTION_API_URL}/videos`);
   url.searchParams.set("search", showTitle);
-  url.searchParams.set("fields", "id,duration,allow_embed,owner.screenname,created_time");
+  url.searchParams.set("fields", "id,duration,allow_embed,owner.screenname,owner.username,created_time");
   url.searchParams.set("limit", "25");
   // Yayın öncesi tanıtımlara biraz pay bırakmak için bir yıl geriye toleranslı.
   if (minYear) url.searchParams.set("created_after", `${minYear - 1}-01-01`);
@@ -75,35 +80,39 @@ export async function findDailymotionChannel(
   // isimlendirdiği videolar, gelecekte aynı hesaba alakasız içerik de
   // yüklenebileceği garantisi vermiyor.
   const normalizedTitle = normalize(showTitle);
-  const counts = new Map<string, number>();
+  const counts = new Map<string, { username: string; count: number }>();
   for (const item of data.list ?? []) {
     const owner = item["owner.screenname"];
-    if (!owner || !item.allow_embed || item.duration < MIN_EPISODE_SECONDS) continue;
+    const username = item["owner.username"];
+    if (!owner || !username || !item.allow_embed || item.duration < MIN_EPISODE_SECONDS) continue;
     if (minTimestamp && item.created_time && item.created_time < minTimestamp) continue;
     if (!normalize(owner).includes(normalizedTitle)) continue;
-    counts.set(owner, (counts.get(owner) ?? 0) + 1);
+    const entry = counts.get(owner);
+    if (entry) entry.count += 1;
+    else counts.set(owner, { username, count: 1 });
   }
 
-  let best: { ownerName: string; count: number } | null = null;
-  for (const [ownerName, count] of counts) {
-    if (count < 2) continue;
-    if (!best || count > best.count) best = { ownerName, count };
+  let best: { ownerName: string; username: string; count: number } | null = null;
+  for (const [ownerName, entry] of counts) {
+    if (entry.count < 2) continue;
+    if (!best || entry.count > best.count) best = { ownerName, ...entry };
   }
 
-  const result = best ? { ownerName: best.ownerName } : null;
+  const result = best ? { ownerName: best.ownerName, ownerUsername: best.username } : null;
   channelCache.set(cacheKey, result);
   return result;
 }
 
 export async function searchDailymotionVideos(
   query: string,
-  ownerName?: string,
+  ownerUsername?: string,
 ): Promise<DailymotionSearchResult[]> {
   const url = new URL(`${DAILYMOTION_API_URL}/videos`);
   url.searchParams.set("search", query);
   url.searchParams.set("fields", "id,title,duration,allow_embed,thumbnail_url,owner.screenname");
   url.searchParams.set("limit", "20");
-  if (ownerName) url.searchParams.set("owners", ownerName);
+  // `owners` filtresi kullanıcı adını (screenname değil) bekliyor.
+  if (ownerUsername) url.searchParams.set("owners", ownerUsername);
 
   const res = await fetch(url);
   if (!res.ok) {

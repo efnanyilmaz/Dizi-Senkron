@@ -30,12 +30,12 @@ dailymotionRouter.get("/channel", requireAuth, async (req, res) => {
 // dönülür — kullanıcı isterse "link yapıştır" moduna geçer.
 dailymotionRouter.get("/search", requireAuth, async (req, res) => {
   const query = String(req.query.q ?? "").trim();
-  const ownerName = req.query.ownerName ? String(req.query.ownerName) : undefined;
-  if (!query || !ownerName) {
+  const ownerUsername = req.query.ownerUsername ? String(req.query.ownerUsername) : undefined;
+  if (!query || !ownerUsername) {
     return res.json([]);
   }
 
-  const results = await searchDailymotionVideos(query, ownerName);
+  const results = await searchDailymotionVideos(query, ownerUsername);
   res.json(results);
 });
 

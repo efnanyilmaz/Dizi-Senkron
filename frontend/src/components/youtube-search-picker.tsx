@@ -94,7 +94,7 @@ export function YoutubeSearchPicker({
         ? `/youtube/search?q=${encodeURIComponent(effectiveQuery)}&channelId=${ytChannel.channelId}`
         : `/youtube/search?q=${encodeURIComponent(effectiveQuery)}`;
       const dmUrl = dmChannel
-        ? `/dailymotion/search?q=${encodeURIComponent(effectiveQuery)}&ownerName=${encodeURIComponent(dmChannel.ownerName)}`
+        ? `/dailymotion/search?q=${encodeURIComponent(effectiveQuery)}&ownerUsername=${encodeURIComponent(dmChannel.ownerUsername)}`
         : `/dailymotion/search?q=${encodeURIComponent(effectiveQuery)}`;
 
       Promise.allSettled([

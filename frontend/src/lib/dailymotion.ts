@@ -5,7 +5,7 @@ export type DailymotionSearchResult = {
   thumbnailUrl: string | null;
 };
 
-export type DailymotionChannel = { ownerName: string };
+export type DailymotionChannel = { ownerName: string; ownerUsername: string };
 
 export function extractDailymotionVideoId(input: string): string | null {
   const trimmed = input.trim();
